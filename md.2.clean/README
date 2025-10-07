@@ -1,8 +1,0 @@
-MD dynamics of spring chain with Verlet integrator
-
-1.4) comparing of Verlet and Velocity Verlet algorithms
-1.5) testing a different time unit (nanoseconds instead of picoseconds)
-1.7) comparing the result of simulations after applying a perturbation to 1D chain
-1.8) repeating 1.7 with 3D chain; estimating Lyapunov divergence parameters
-
-Results are found in 'plots' directory
