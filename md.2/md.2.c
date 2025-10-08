@@ -5,6 +5,7 @@
 
 #define square(x) ((x)*(x))
 #define cube(x) ((x)*(x)*(x))
+#define kB 0.08617718
 /* UNITS: meV, ps, Ang -- mass is in units of ~1.602e-26 kg ~= 9.648 amu  */
 
 int N;             //number of atoms
@@ -19,6 +20,7 @@ long int print;    //print every these steps
 double *x,*y,*z,*Vx,*Vy,*Vz,*Fx,*Fy,*Fz;
 double *xprev,*yprev,*zprev,*xtmp,*ytmp,*ztmp; // to store the old coordinates for Verlet
 double epot,ekin,etot;
+double temperature;
 char inputxyz[30],trajfile[30];
 FILE *ftraj;
 
@@ -148,6 +150,12 @@ void calc_energies(){
 	etot=ekin+epot;
 }
 
+void calc_temperature(){
+
+	temperature= 2. * ekin / (N * kB * 3.);
+
+}
+
 void Euler_integrator(){
 	int i;
 
@@ -253,10 +261,11 @@ void printout(){
 	static int once=1;
 	if(once){
 		once=0;
-		printf("#time\tekin\t\tepot\t\tetot\t\tchain_length\n");
+		printf("#time\tekin\t\tepot\t\tetot\t\tchain_length\temp\n");
 	}
 	calc_energies();
-	printf("%g\t%lf\t%lf\t%lf\t%lf\n",dt*nstep,ekin,epot,etot,dist(0,N-1) );
+	calc_temperature();
+	printf("%g\t%lf\t%lf\t%lf\t%lf\t%lf\n",dt*nstep,ekin,epot,etot,dist(0,N-1),temperature );
 	write_traj();
 }
 
