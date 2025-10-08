@@ -1,0 +1,203 @@
+
+
+*******************************************************************************
+Wed Oct  8 10:12:04 2025
+
+
+FIT:    data read from "recursion.dat"
+        format = z
+        #datapoints = 89
+        residuals are weighted equally (unit weight)
+
+function used for fitting: a*x
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a            
+   0 2.7249334337e+11   0.00e+00  5.10e+01    1.000000e+00
+   3 2.2837452383e+09  -1.84e-05  5.10e-02    1.082442e+03
+
+After 3 iterations the fit converged.
+final sum of squares of residuals : 2.28375e+09
+rel. change during last iteration : -1.8437e-10
+
+degrees of freedom    (FIT_NDF)                        : 88
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 5094.28
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.59517e+07
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a               = 1082.44          +/- 10.6         (0.9791%)
+
+
+*******************************************************************************
+Wed Oct  8 10:16:23 2025
+
+
+FIT:    data read from "recursion.dat"
+        format = z
+        #datapoints = 110
+        residuals are weighted equally (unit weight)
+
+function used for fitting: a*x
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a            
+   0 5.3198904212e+11   0.00e+00  6.31e+01    1.000000e+00
+   3 2.5252670756e+09  -1.41e-05  6.31e-02    1.100923e+03
+
+After 3 iterations the fit converged.
+final sum of squares of residuals : 2.52527e+09
+rel. change during last iteration : -1.40611e-10
+
+degrees of freedom    (FIT_NDF)                        : 109
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 4813.27
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.31676e+07
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a               = 1100.92          +/- 7.276        (0.6609%)
+
+
+*******************************************************************************
+Wed Oct  8 10:22:21 2025
+
+
+FIT:    data read from "recursion.dat"
+        format = z
+        #datapoints = 110
+        residuals are weighted equally (unit weight)
+
+function used for fitting: a*x
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a            
+   0 5.3198904212e+11   0.00e+00  6.31e+01    1.000000e+00
+   3 2.5252670756e+09  -1.41e-05  6.31e-02    1.100923e+03
+
+After 3 iterations the fit converged.
+final sum of squares of residuals : 2.52527e+09
+rel. change during last iteration : -1.40611e-10
+
+degrees of freedom    (FIT_NDF)                        : 109
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 4813.27
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.31676e+07
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a               = 1100.92          +/- 7.276        (0.6609%)
+
+
+*******************************************************************************
+Wed Oct  8 10:33:00 2025
+
+
+FIT:    data read from "recursion2.dat"
+        format = z
+        #datapoints = 91
+        residuals are weighted equally (unit weight)
+
+function used for fitting: b*x
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   b            
+   0 4.4188202168e+11   0.00e+00  5.21e+01    1.000000e+00
+   3 2.4647425995e+09  -2.54e-05  5.21e-02    1.334623e+03
+
+After 3 iterations the fit converged.
+final sum of squares of residuals : 2.46474e+09
+rel. change during last iteration : -2.54303e-10
+
+degrees of freedom    (FIT_NDF)                        : 90
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 5233.17
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.7386e+07
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+b               = 1334.62          +/- 10.53        (0.7889%)
+
+
+*******************************************************************************
+Wed Oct  8 10:33:11 2025
+
+
+FIT:    data read from "recursion1.dat"
+        format = z
+        #datapoints = 110
+        residuals are weighted equally (unit weight)
+
+function used for fitting: a*x
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a            
+   0 5.3198904212e+11   0.00e+00  6.31e+01    1.000000e+00
+   3 2.5252670756e+09  -1.41e-05  6.31e-02    1.100923e+03
+
+After 3 iterations the fit converged.
+final sum of squares of residuals : 2.52527e+09
+rel. change during last iteration : -1.40611e-10
+
+degrees of freedom    (FIT_NDF)                        : 109
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 4813.27
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.31676e+07
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a               = 1100.92          +/- 7.276        (0.6609%)
+
+
+*******************************************************************************
+Wed Oct  8 10:38:24 2025
+
+
+FIT:    data read from "recursion2.dat"
+        format = z
+        #datapoints = 91
+        residuals are weighted equally (unit weight)
+
+function used for fitting: b*x
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   b            
+   0 4.4188202168e+11   0.00e+00  5.21e+01    1.000000e+00
+   3 2.4647425995e+09  -2.54e-05  5.21e-02    1.334623e+03
+
+After 3 iterations the fit converged.
+final sum of squares of residuals : 2.46474e+09
+rel. change during last iteration : -2.54303e-10
+
+degrees of freedom    (FIT_NDF)                        : 90
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 5233.17
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.7386e+07
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+b               = 1334.62          +/- 10.53        (0.7889%)
+
+
+*******************************************************************************
+Wed Oct  8 10:38:28 2025
+
+
+FIT:    data read from "recursion1.dat"
+        format = z
+        #datapoints = 110
+        residuals are weighted equally (unit weight)
+
+function used for fitting: a*x
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a            
+   0 5.3198904212e+11   0.00e+00  6.31e+01    1.000000e+00
+   3 2.5252670756e+09  -1.41e-05  6.31e-02    1.100923e+03
+
+After 3 iterations the fit converged.
+final sum of squares of residuals : 2.52527e+09
+rel. change during last iteration : -1.40611e-10
+
+degrees of freedom    (FIT_NDF)                        : 109
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 4813.27
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.31676e+07
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a               = 1100.92          +/- 7.276        (0.6609%)
