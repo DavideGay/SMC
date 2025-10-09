@@ -3,8 +3,6 @@
 #include <math.h>
 #include <string.h>
 
-#define square(x) ((x)*(x))
-#define cube(x) ((x)*(x)*(x))
 #define kB 0.08617718  /*  kB= 1./11.604=0.086 meV/K  */
 /* UNITS: meV, ps, Ang -- mass is in units of ~1.602e-26 kg ~= 9.648 amu  */
 
@@ -14,16 +12,20 @@ double dt;         //timestep
 double mass;       //mass
 double kspring;    //spring constant
 double d0;         //equilibrium spring distance
+double c_rep;      //repulsive interaction of scatterers
+double kbox;       //spring constant of box wall
+double side,halfside;//side of the box
 long int nsteps;   //number of simulation steps
 long int nstep;    //actual step, changing during simulation
 long int print;    //print every these steps
 double *x,*y,*z,*Vx,*Vy,*Vz,*Fx,*Fy,*Fz;
 double *xprev,*yprev,*zprev,*xtmp,*ytmp,*ztmp; // to store the old coordinates for Verlet
-double *x0,*yy0,*z0,*Vx0,*Vy0,*Vz0; //initial coords and velocities (y0 is bessel function in mathlib)
-double epot,ekin,etot;
+double epot,ekin,etot,Tm,Tw;
 char inputxyz[30],trajfile[30];
-FILE *ftraj,*frec;
+FILE *ftraj;
 
+double square(double val){ return val*val; }
+double cube(double val){ return val*val*val; }
 
 void read_parameters(char *filename){
 	char dummy[100];
@@ -37,8 +39,11 @@ void read_parameters(char *filename){
 	if( fscanf(fin,"%s %lf ", dummy, &dt      ) != 2 ) error();
 	if( fscanf(fin,"%s %lf ", dummy, &kspring ) != 2 ) error();
 	if( fscanf(fin,"%s %lf ", dummy, &d0      ) != 2 ) error();
-	if( fscanf(fin,"%s %s " , dummy, inputxyz ) != 2 ) error();
-	if( fscanf(fin,"%s %s " , dummy, trajfile ) != 2 ) error();
+	if( fscanf(fin,"%s %s  ", dummy, inputxyz ) != 2 ) error();
+	if( fscanf(fin,"%s %s  ", dummy, trajfile ) != 2 ) error();
+	if( fscanf(fin,"%s %lf ", dummy, &c_rep   ) != 2 ) error();
+	if( fscanf(fin,"%s %lf ", dummy, &side    ) != 2 ) error();
+	if( fscanf(fin,"%s %lf ", dummy, &kbox    ) != 2 ) error();
 
 	//printout parameters to check
 	fprintf(stderr,"nsteps %ld\n" ,nsteps);
@@ -49,10 +54,13 @@ void read_parameters(char *filename){
 	fprintf(stderr,"d0 %g\n"      ,d0);
 	fprintf(stderr,"inputxyz %s\n",inputxyz);
 	fprintf(stderr,"trajfile %s\n",trajfile);
+	fprintf(stderr,"c_rep %g\n"   ,c_rep);
+	fprintf(stderr,"side %g\n"    ,side);
+	fprintf(stderr,"kbox %g\n"    ,kbox);
 
 	fclose(fin);
+	halfside=side/2.;
 }
-
 
 void readxyz(){
 	int i,n=0,readCharCount;
@@ -69,9 +77,6 @@ void readxyz(){
 	if( (x=(double *)  calloc(N, sizeof(double))) == NULL ) n++;
 	if( (y=(double *)  calloc(N, sizeof(double))) == NULL ) n++;
 	if( (z=(double *)  calloc(N, sizeof(double))) == NULL ) n++;
-	if( (x0=(double *)  calloc(N, sizeof(double))) == NULL ) n++;
-	if( (yy0=(double *)  calloc(N, sizeof(double))) == NULL ) n++;
-	if( (z0=(double *)  calloc(N, sizeof(double))) == NULL ) n++;
 	if( (xprev=(double *) calloc(N, sizeof(double))) == NULL ) n++;
 	if( (yprev=(double *) calloc(N, sizeof(double))) == NULL ) n++;
 	if( (zprev=(double *) calloc(N, sizeof(double))) == NULL ) n++;
@@ -81,9 +86,6 @@ void readxyz(){
 	if( (Vx=(double *) calloc(N, sizeof(double))) == NULL ) n++;
 	if( (Vy=(double *) calloc(N, sizeof(double))) == NULL ) n++;
 	if( (Vz=(double *) calloc(N, sizeof(double))) == NULL ) n++;
-	if( (Vx0=(double *) calloc(N, sizeof(double))) == NULL ) n++;
-	if( (Vy0=(double *) calloc(N, sizeof(double))) == NULL ) n++;
-	if( (Vz0=(double *) calloc(N, sizeof(double))) == NULL ) n++;
 	if( (Fx=(double *) calloc(N, sizeof(double))) == NULL ) n++;
 	if( (Fy=(double *) calloc(N, sizeof(double))) == NULL ) n++;
 	if( (Fz=(double *)  calloc(N, sizeof(double))) == NULL ) n++;
@@ -101,101 +103,112 @@ void readxyz(){
 		if( sscanf(dummy+readCharCount,"%lf %lf %lf", &Vx[i],&Vy[i],&Vz[i]) !=3 ) Vx[i]=Vy[i]=Vz[i]=0.;
 	}
 	fclose(fin);
+	fprintf(stderr,"Simulation with %d atoms\n",N);
+}
 
-	//save reference coordinates for recursion
-	for(i=0;i<N;i++){ x0[i]=x[i]; yy0[i]=y[i]; z0[i]=z[i]; Vx0[i]=Vx[i]; Vy0[i]=Vy[i]; Vz0[i]=Vz[i];  }
+double distx(int i, int j){
+	double dX= x[i]-x[j];
+	if(kbox>0.) return dX;              //no PBC
+	else return dX-round(dX/side)*side; //yes PBC
+}
+
+double disty(int i, int j){
+	double dY= y[i]-y[j];
+	if(kbox>0.) return dY;              //no PBC
+	else return dY-round(dY/side)*side; //yes PBC
+}
+
+double distz(int i, int j){
+	double dZ= z[i]-z[j];
+	if(kbox>0.) return dZ;              //no PBC
+	else return dZ-round(dZ/side)*side; //yes PBC
 }
 
 double dist(int i, int j){
-	return sqrt( square(x[i]-x[j]) + square(y[i]-y[j]) + square(z[i]-z[j]) );
-}
-
-double dist0(int i, int j){
-	return sqrt( square(x0[i]-x0[j]) + square(yy0[i]-yy0[j]) + square(z0[i]-z0[j]) );
+	return sqrt( square(distx(i,j)) + square(disty(i,j)) + square(distz(i,j)) );
 }
 
 void calc_forces(){
-	int i; double effe;
+	int i,j; double effe,d,d4,d12;
 	//reset the forces
 	for (i=0;i<N;i++) { Fx[i]=Fy[i]=Fz[i]=0; }
 
-	//sum up forces
-	for (i=0;i<N-1;i++) {
-		effe = -kspring*(dist(i,i+1) - d0)/dist(i,i+1);
-		Fx[i] += effe*(x[i] - x[i+1]); Fx[i+1] += -effe*(x[i] - x[i+1]);
-		Fy[i] += effe*(y[i] - y[i+1]); Fy[i+1] += -effe*(y[i] - y[i+1]);
-		Fz[i] += effe*(z[i] - z[i+1]); Fz[i+1] += -effe*(z[i] - z[i+1]);
-	}
+	//chain
+	for (i=0;i<N-1;i++)
+	    if(atomtype[i]=='B' && atomtype[i+1]=='B') {
+		    effe = -kspring*(dist(i,i+1) - d0)/dist(i,i+1);
+		    Fx[i] += effe*distx(i,i+1); Fx[i+1] += -effe*distx(i,i+1);
+		    Fy[i] += effe*disty(i,i+1); Fy[i+1] += -effe*disty(i,i+1);
+		    Fz[i] += effe*distz(i,i+1); Fz[i+1] += -effe*distz(i,i+1);
+	    }
+
+	//scatterers
+	for (i=0;i<N;i++)
+	    for(j=0;j<i;j++){
+		if(atomtype[i]=='B' && atomtype[j]=='B') continue;
+
+		d   = dist(i,j);
+		d4  = d*d*d*d;
+		d12 = d4*d4*d4;
+		effe = 10.*c_rep/d12;
+
+		Fx[i] +=  effe*distx(i,j);  Fx[j] += -effe*distx(i,j);
+		Fy[i] +=  effe*disty(i,j);  Fy[j] += -effe*disty(i,j);
+		Fz[i] +=  effe*distz(i,j);  Fz[j] += -effe*distz(i,j);
+	    }
+
+	//box (if no PBC)
+	if(kbox>0.) for (i=0;i<N;i++){
+	  if ( x[i] < -halfside ) Fx[i] -= kbox*(x[i] + halfside);
+	  if ( x[i] >  halfside ) Fx[i] -= kbox*(x[i] - halfside);
+	  if ( y[i] < -halfside ) Fy[i] -= kbox*(y[i] + halfside);
+	  if ( y[i] >  halfside ) Fy[i] -= kbox*(y[i] - halfside);
+	  if ( z[i] < -halfside ) Fz[i] -= kbox*(z[i] + halfside);
+	  if ( z[i] >  halfside ) Fz[i] -= kbox*(z[i] - halfside);
+       }
+
 }
 
 void calc_energies(){
-	int i;
+	int i,j,Nm=0,Nw=0; double d,d5,d10;
 
-	ekin=0;
+	ekin=Tm=Tw=0;
 	for(i=0;i<N;i++)
-	    ekin += 0.5 * mass * ( Vx[i]*Vx[i] + Vy[i]*Vy[i] + Vz[i]*Vz[i] );
+	    if(atomtype[i]=='B'){ Tm+=( Vx[i]*Vx[i] + Vy[i]*Vy[i] + Vz[i]*Vz[i] ); Nm++; }
+	    else                { Tw+=( Vx[i]*Vx[i] + Vy[i]*Vy[i] + Vz[i]*Vz[i] ); Nw++; }
+
+	ekin = 0.5 * mass * ( Tm + Tw );
+	Tm= mass*Tm/(3.*Nm*kB);
+	Tw= mass*Tw/(3.*Nw*kB);
 
 	epot=0;
+
+	//chain
 	for (i=0;i<N-1;i++)
-	    epot += 0.5*kspring*square( dist(i,i+1) - d0 );
+	    if(atomtype[i]=='B' && atomtype[i+1]=='B')
+		epot += 0.5*kspring*square( dist(i,i+1) - d0 );
+
+        //scatterers
+	for (i=0;i<N;i++)
+	    for(j=0;j<i;j++){
+		if(atomtype[i]=='B' && atomtype[j]=='B') continue;
+		d   = dist(i,j);
+		d5  = d*d*d*d*d;
+		d10 = d5*d5;
+		epot += c_rep/d10;
+	    }
+
+	//box (if no PBC)
+	if(kbox>0.) for (i=0;i<N;i++){
+	  if ( x[i] < -halfside ) epot += 0.5*kbox*square(x[i] + halfside);
+	  if ( x[i] >  halfside ) epot += 0.5*kbox*square(x[i] - halfside);
+	  if ( y[i] < -halfside ) epot += 0.5*kbox*square(y[i] + halfside);
+	  if ( y[i] >  halfside ) epot += 0.5*kbox*square(y[i] - halfside);
+	  if ( z[i] < -halfside ) epot += 0.5*kbox*square(z[i] + halfside);
+	  if ( z[i] >  halfside ) epot += 0.5*kbox*square(z[i] - halfside);
+       }
 
 	etot=ekin+epot;
-}
-
-void Euler_integrator(){
-	int i;
-
-	calc_forces(); // update the forces
-
-	//update positions
-	for (i=0;i<N;i++){
-		x[i] += Vx[i]*dt;
-		y[i] += Vy[i]*dt;
-		z[i] += Vz[i]*dt;
-	}
-
-	// update velocities
-	for (i=0;i<N;i++){
-		Vx[i] += Fx[i] / mass * dt;
-		Vy[i] += Fy[i] / mass * dt;
-		Vz[i] += Fz[i] / mass * dt;
-	}
-}
-
-void Verlet_integrator(){
-	int i;
-	static int once=1;
-
-	calc_forces(); // update the forces
-
-	//running Euler at first step
-	if(once){
-	    //saving old coords
-	    for (i=0;i<N;i++){ xprev[i]=x[i]; yprev[i]=y[i]; zprev[i]=z[i]; }
-	    Euler_integrator();
-	    once=0;
-	    return;
-	}
-
-	//storing coords in temporary arrays
-	for (i=0;i<N;i++){ xtmp[i]=x[i]; ytmp[i]=y[i]; ztmp[i]=z[i]; }
-
-	//update positions
-	for (i=0;i<N;i++){
-		x[i] = 2.*x[i] - xprev[i] + Fx[i]*dt*dt/mass;
-		y[i] = 2.*y[i] - yprev[i] + Fy[i]*dt*dt/mass;
-		z[i] = 2.*z[i] - zprev[i] + Fz[i]*dt*dt/mass;
-	}
-
-	//update velocities
-	for (i=0;i<N;i++){
-		Vx[i] = ( x[i] - xprev[i] )/(2. * dt);
-		Vy[i] = ( y[i] - yprev[i] )/(2. * dt);
-		Vz[i] = ( z[i] - zprev[i] )/(2. * dt);
-	}
-
-	//saving previous coords
-	for (i=0;i<N;i++){ xprev[i]=xtmp[i]; yprev[i]=ytmp[i]; zprev[i]=ztmp[i]; }
 }
 
 void velocity_Verlet_integrator(){
@@ -234,7 +247,7 @@ void write_traj(){
 		if((ftraj=fopen(trajfile,"w"))==NULL) { fprintf(stderr,"ERROR while saving trajectory file\n"); exit(1); }
 	}
 
-	fprintf(ftraj,"%d\nTIME: %g\n",N,dt*nstep);
+	fprintf(ftraj,"%d\nLattice=\"%g 0.0 0.0  0.0 %g 0.0  0.0 0.0 %g\"\tTIME: %g\n",N,side,side,side,dt*nstep);
 	for(i=0;i<N;i++){
 		fprintf(ftraj,"%c\t%.6f\t%.6f\t%.6f\t%.6e\t%.6e\t%.6e\t%.6e\t%.6e\t%6e\n" ,atomtype[i],x[i],y[i],z[i],Vx[i],Vy[i],Vz[i],Fx[i],Fy[i],Fz[i]);
 	}
@@ -245,59 +258,12 @@ void printout(){
 	static int once=1;
 	if(once){
 		once=0;
-		printf("#time\tekin\t\tepot\t\tetot\t\tchain_length\n");
+		printf("#time\tekin\t\tepot\t\tetot\t\tchain_length\tTmolecule\tTwater\n");
 	}
 	calc_energies();
-	printf("%g\t%lf\t%lf\t%lf\t%lf\n",dt*nstep,ekin,epot,etot,dist(0,N-1) );
+	printf("%g\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\n",dt*nstep,ekin,epot,etot,dist(0,N-1),Tm,Tw );
 	write_traj();
-}
-
-/****************************************************
- Functions to calculate recursion times
-****************************************************/
-double Dv(){
-  int i; double res=0;
-
-  // difference in momenta
-  for (i=0;i<N;i++)
-    res += square(Vx[i]-Vx0[i])+square(Vy[i]-Vy0[i])+square(Vz[i]-Vz0[i]);
-
-  return sqrt(res);
-}
-
-double Dd(){
-  int i; double res=0;
-
-  // difference in positions
-  for (i=0;i<N-1;i++)
-     res += square( dist(i,i+1) - dist0(i,i+1) );
-
-  return sqrt(res);
-}
-
-void recursion(){
-  static int once=1,exited=0;
-  double DD=0.6;
-  double DV=4.5;
-  double dv,dd;
-
-  if(once){
-      once=0;
-      if((frec=fopen("recursion.dat","w"))==NULL) { fprintf(stderr,"ERROR while saving recursion file\n"); exit(1); }
-  }
-
-  dv = Dv();
-  dd = Dd();
-
-  // check if recurrent
-  if ( exited && dd < DD && dv < DV ) // if trajectory returns into the box
-      {
-        fprintf(frec,"%lf\n",dt*nstep); fflush(frec);	// print time
-	exited=0;
-      }
-  else if ( dd > DD || dv > DV ) exited = 1;  // if exits the box
-
-  return;
+	fflush(stdout);
 }
 
 
@@ -319,14 +285,11 @@ int main(int argc, char *argv[])
 
       velocity_Verlet_integrator(); // one time of dynamics
 
-	recursion();
-
       // write trajectory and print some information
-      if ( nstep % print == 0 ) { printout(); }
+      if ( nstep % print == 0 ) printout();
    }
 
    fclose(ftraj);
-   fclose(frec);
 
    return 0;
 }

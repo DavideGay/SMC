@@ -134,7 +134,7 @@ set cbtics  norangelimit autofreq
 set rtics axis in scale 1,0.5 nomirror norotate  autojustify
 set rtics  norangelimit autofreq 
 unset ttics
-set title "" 
+set title "T1 = 5.61191 K ; T2 = 5.71576 K" 
 set title  font "" norotate
 set timestamp bottom 
 set timestamp "" 
@@ -142,13 +142,13 @@ set timestamp  font "" norotate
 set trange [ * : * ] noreverse nowriteback
 set urange [ * : * ] noreverse nowriteback
 set vrange [ * : * ] noreverse nowriteback
-set xlabel "" 
+set xlabel "recursion event" 
 set xlabel  font "" textcolor lt -1 norotate
 set x2label "" 
 set x2label  font "" textcolor lt -1 norotate
 set xrange [ * : * ] noreverse writeback
 set x2range [ * : * ] noreverse writeback
-set ylabel "" 
+set ylabel "time [ns]" 
 set ylabel  font "" textcolor lt -1 rotate
 set y2label "" 
 set y2label  font "" textcolor lt -1 rotate
@@ -195,17 +195,17 @@ pngplot = "set term push; set term pngcairo enhanced color rounded size 1600,120
 matlab = "set palette positive nops_allcF maxcolors 0 gamma 1.5 color model RGB;           set palette defined  (0  0.0 0.0 0.5,                                 1  0.0 0.0 1.0,                                 2  0.0 0.5 1.0,                                 3  0.0 1.0 1.0,                                 4  0.5 1.0 0.5,                                 5  1.0 1.0 0.0,                                 6  1.0 0.5 0.0,                                 7  1.0 0.0 0.0,                                 8  0.5 0.0 0.0 )"
 rainbow = "set palette positive nops_allcF maxcolors 0 gamma 1.5 color model HSV;            set palette defined ( 0 0 1 1, 1 0.85 1 1 )"
 mandelbrot = "set sample 500; set isosample 500; set pm3d map;               complex(x,y) = x*{1,0}+y*{0,1};               mandel(x,y,z,n) = (abs(z)>2.0 || n>=100) ? n : mandel(x,y,z*z+complex(x,y),n+1);               splot mandel(x,y,{0,0},0) w pm3d not"
-b = 1334.6226171233
+a = 850.542220261288
 FIT_CONVERGED = 1
-FIT_NDF = 109
-FIT_STDFIT = 4813.27205232354
-FIT_WSSR = 2525267075.61499
+FIT_NDF = 118
+FIT_STDFIT = 3622.20940322761
+FIT_WSSR = 1548207313.378
 FIT_P = 0.0
 FIT_NITER = 3
-b_err = 10.5283161526558
-a = 1100.92254070091
-a_err = 7.27586086402037
-## Last datafile plotted: "recursion2.dat"
-p "recursion1.dat" u ($1/1000) w p t "recursion events", a/1000*x w lines lw 2 t "ax, a=1.10092", "recursion2.dat" u ($1/1000) w p t "recursion events, 2", b/1000*x w l lw 2 t "bx, b=1.33462"
-## fit a*x "recursion1.dat" via a
+a_err = 3.73706121870422
+b = 1002.99899412733
+b_err = 4.86362992020018
+## Last datafile plotted: "recursion2new.dat"
+p "recursion1new.dat" u ($1/1000) w p t "recursion with 1", a/1000*x w lines lw 2 t "ax, a=1.10092", "recursion2new.dat" u ($1/1000) w p t "recursion 2", b/1000*x w l lw 2 t "bx, b=1.33462"
+## fit b*x "recursion2new.dat" via b
 #    EOF
